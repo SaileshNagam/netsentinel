@@ -15,6 +15,13 @@ from app.api.incidents import router as incidents_router
 from app.api.discovery import router as discovery_router
 from app.api.enrichment import router as enrichment_router
 from app.api.websocket import router as websocket_router
+from app.api.connections import router as connections_router
+from app.api.processes import router as processes_router
+from app.api.security_events import router as security_events_router
+from app.api.actions import router as actions_router
+from app.api.system import router as system_router
+from app.api.demo import router as demo_router
+
 
 # Setup structured logging
 logging.basicConfig(
@@ -64,6 +71,12 @@ app.include_router(incidents_router)
 app.include_router(discovery_router)
 app.include_router(enrichment_router)
 app.include_router(websocket_router)
+app.include_router(connections_router)
+app.include_router(processes_router)
+app.include_router(security_events_router)
+app.include_router(actions_router)
+app.include_router(system_router)
+app.include_router(demo_router)
 
 @app.get("/health")
 async def health_check():

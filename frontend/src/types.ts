@@ -100,3 +100,44 @@ export interface AgentActivity {
   confidence: string;
   timestamp: string;
 }
+
+export interface ConnectionEvent {
+  id: number;
+  protocol: string;
+  local_ip: string;
+  local_port: number;
+  remote_ip: string;
+  remote_port: number;
+  state: string;
+  pid: number | null;
+  process_name: string | null;
+  simulation: boolean;
+  timestamp: string;
+}
+
+export interface ProcessSnapshot {
+  id: number;
+  pid: number;
+  name: string;
+  username: string | null;
+  cpu_percent: number;
+  memory_percent: number;
+  status: string;
+  simulation: boolean;
+  timestamp: string;
+}
+
+export interface DefensiveAction {
+  id: number;
+  incident_id: string;
+  action_type: string;
+  target: string;
+  status: string;
+  operator: string;
+  reason: string;
+  simulation_mode: boolean;
+  dry_run_result?: string;
+  execution_result?: string;
+  created_at: string;
+  decided_at?: string;
+}

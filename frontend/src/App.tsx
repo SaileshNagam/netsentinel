@@ -12,13 +12,19 @@ import { DeviceTable } from './components/DeviceTable';
 import { NetworkTopologyView } from './components/NetworkTopologyView';
 import { DeviceDossierModal } from './components/DeviceDossierModal';
 import { LiveAlertFeed } from './components/LiveAlertFeed';
+import { ConnectionsTable } from './components/ConnectionsTable';
+import { DefensiveActionsTable } from './components/DefensiveActionsTable';
+import { ConnectionEvent, DefensiveAction } from './types';
+import { fetchLiveConnections, fetchDefensiveActions, triggerDemoScenario } from './lib/api';
 
 export const App: React.FC = () => {
   const [mode, setMode] = useState<'LIVE' | 'DEMO'>('LIVE');
-  const [viewMode, setViewMode] = useState<'TABLE' | 'TOPOLOGY'>('TABLE');
+  const [viewMode, setViewMode] = useState<'TABLE' | 'TOPOLOGY' | 'CONNECTIONS' | 'ACTIONS'>('TABLE');
   const [devices, setDevices] = useState<Device[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [posture, setPosture] = useState<SecurityPostureStats | null>(null);
+  const [connections, setConnections] = useState<ConnectionEvent[]>([]);
+  const [actions, setActions] = useState<DefensiveAction[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -27,14 +33,18 @@ export const App: React.FC = () => {
 
   const loadData = useCallback(async () => {
     try {
-      const [devs, alts, post] = await Promise.all([
+      const [devs, alts, post, conns, acts] = await Promise.all([
         fetchDevices(),
         fetchAlerts(),
-        fetchPosture()
+        fetchPosture(),
+        fetchLiveConnections(),
+        fetchDefensiveActions()
       ]);
       setDevices(devs);
       setAlerts(alts);
       setPosture(post);
+      setConnections(conns);
+      setActions(acts);
     } catch (err) {
       console.error('Failed to load NetSentinel data:', err);
     } finally {
@@ -208,7 +218,7 @@ export const App: React.FC = () => {
           activeDeviceName={devices.find(d => d.risk_score >= 60)?.user_label || 'D-019 (192.168.1.27)'}
         />
 
-        {/* View Mode Tabs: Table vs Interactive Topology */}
+        {/* View Mode Tabs: Table vs Interactive Topology vs Connections vs Actions */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-slate-200">
@@ -217,29 +227,76 @@ export const App: React.FC = () => {
             <span className="text-xs text-slate-400 font-mono">({devices.length} Monitored Endpoints)</span>
           </div>
 
-          <div className="flex rounded-lg bg-[#111726] p-1 border border-[#1F293D]">
-            <button
-              onClick={() => setViewMode('TABLE')}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md transition flex items-center gap-1.5 ${
-                viewMode === 'TABLE'
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              INVENTORY TABLE
-            </button>
-            <button
-              onClick={() => setViewMode('TOPOLOGY')}
-              className={`px-3 py-1.5 text-xs font-mono rounded-md transition flex items-center gap-1.5 ${
-                viewMode === 'TOPOLOGY'
-                  ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Network className="w-3.5 h-3.5" />
-              TOPOLOGY MAP
-            </button>
+          <div className="flex items-center gap-4">
+            {mode === 'DEMO' && (
+              <button
+                onClick={async () => {
+                  try {
+                    showNotification("Triggering Simulated C2 Beacon Demo...");
+                    await triggerDemoScenario('c2');
+                    await loadData();
+                  } catch (e) {
+                    showNotification("Failed to trigger demo.");
+                  }
+                }}
+                className="px-3 py-1.5 text-xs font-mono rounded-md bg-purple-500/20 text-purple-400 border border-purple-500/40 hover:bg-purple-500/30 transition-colors font-bold flex items-center gap-1.5"
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                TEST C2 BEACON
+              </button>
+            )}
+            
+            <div className="flex rounded-lg bg-[#111726] p-1 border border-[#1F293D]">
+              <button
+                onClick={() => setViewMode('TABLE')}
+                className={`px-3 py-1.5 text-xs font-mono rounded-md transition flex items-center gap-1.5 ${
+                  viewMode === 'TABLE'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                INVENTORY
+              </button>
+              <button
+                onClick={() => setViewMode('TOPOLOGY')}
+                className={`px-3 py-1.5 text-xs font-mono rounded-md transition flex items-center gap-1.5 ${
+                  viewMode === 'TOPOLOGY'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Network className="w-3.5 h-3.5" />
+                TOPOLOGY
+              </button>
+              <button
+                onClick={() => setViewMode('CONNECTIONS')}
+                className={`px-3 py-1.5 text-xs font-mono rounded-md transition flex items-center gap-1.5 ${
+                  viewMode === 'CONNECTIONS'
+                    ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                CONNECTIONS
+              </button>
+              <button
+                onClick={() => setViewMode('ACTIONS')}
+                className={`px-3 py-1.5 text-xs font-mono rounded-md transition flex items-center gap-1.5 ${
+                  viewMode === 'ACTIONS'
+                    ? 'bg-orange-500/20 text-orange-400 font-bold border border-orange-500/40'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                DEFENSES
+                {actions.filter(a => a.status === 'PENDING_APPROVAL').length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 rounded-full bg-orange-500 text-black text-[10px] font-bold">
+                    {actions.filter(a => a.status === 'PENDING_APPROVAL').length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -250,11 +307,15 @@ export const App: React.FC = () => {
             onSelectDevice={(device) => setSelectedDevice(device)}
             onClassify={handleClassifyDevice}
           />
-        ) : (
+        ) : viewMode === 'TOPOLOGY' ? (
           <NetworkTopologyView
             devices={devices}
             onSelectDevice={(device) => setSelectedDevice(device)}
           />
+        ) : viewMode === 'CONNECTIONS' ? (
+          <ConnectionsTable connections={connections} />
+        ) : (
+          <DefensiveActionsTable actions={actions} onActionProcessed={loadData} />
         )}
 
       </main>

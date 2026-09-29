@@ -74,3 +74,39 @@ export async function fetchActiveNetwork(): Promise<any> {
   if (!res.ok) throw new Error('Failed to fetch active network');
   return res.json();
 }
+
+export const fetchLiveConnections = async (): Promise<any[]> => {
+  const res = await fetch(`${API_BASE}/connections/live`);
+  if (!res.ok) throw new Error('Failed to fetch connections');
+  return res.json();
+};
+
+export const fetchLiveProcesses = async (): Promise<any[]> => {
+  const res = await fetch(`${API_BASE}/processes`);
+  if (!res.ok) throw new Error('Failed to fetch processes');
+  return res.json();
+};
+
+export const fetchDefensiveActions = async (): Promise<any[]> => {
+  const res = await fetch(`${API_BASE}/actions`);
+  if (!res.ok) throw new Error('Failed to fetch actions');
+  return res.json();
+};
+
+export const executeDefensiveAction = async (actionId: number, type: 'approve' | 'reject' | 'simulate', payload: { operator: string; notes: string }): Promise<any> => {
+  const res = await fetch(`${API_BASE}/actions/${actionId}/${type}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to ${type} action`);
+  return res.json();
+};
+
+export const triggerDemoScenario = async (scenario: 'c2' | 'port_scan' | 'brute_force'): Promise<any> => {
+  const res = await fetch(`${API_BASE}/demo/trigger?scenario=${scenario}`, {
+    method: 'POST'
+  });
+  if (!res.ok) throw new Error(`Failed to trigger demo scenario`);
+  return res.json();
+};
