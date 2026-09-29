@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #090D16;
+    color: #F3F4F6;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom Cyber Glow Effects */
+.glow-emerald {
+  box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.3);
+}
+
+.glow-crimson {
+  box-shadow: 0 0 20px -3px rgba(239, 68, 68, 0.4);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 15px -3px rgba(6, 182, 212, 0.3);
+}
+
+.glow-amber {
+  box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.3);
+}
+
+/* Subtle scanline effect for SOC display */
+.soc-grid-bg {
+  background-image: radial-gradient(rgba(31, 41, 61, 0.5) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
